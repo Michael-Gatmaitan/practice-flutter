@@ -37,7 +37,23 @@ class CustomCard extends StatelessWidget {
                 ),
               ),
               ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    build,
+                    MaterialPageRoute<void>(
+                      builder: (BuildContext context) {
+                        return Scaffold(
+                          appBar: AppBar(title: Text("Sample route")),
+                          body: Center(
+                            child: Text(
+                              "TRhis is a centered texct in another page",
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
                 style: ElevatedButton.styleFrom(
                   fixedSize: Size(70, 70),
                   elevation: 0,
