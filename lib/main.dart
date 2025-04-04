@@ -3,9 +3,52 @@ import 'package:flutter/material.dart';
 import 'package:newflutter/components/forms.dart';
 import 'components/custom_card.dart';
 import 'components/counter_state.dart';
+// import 'routes/about.dart';
+// import 'routes/products/products.dart';
+// import 'routes/users/main.dart';
+import 'package:graphql_flutter/graphql_flutter.dart';
+import 'graphql/graphql_service.dart';
+import 'routes/items/items.dart';
+// // import 'package:graphql_flutter/graphql_flutter.dart';
+// import 'package:hive_flutter/hive_flutter.dart'; // Import hive_flutter
 
-void main() {
-  runApp(MaterialApp(home: Home()));
+void main() async {
+  runApp(MyApp());
+}
+
+// class MyApp extends StatelessWidget {
+//   @override
+//   Widget build(BuildContext context) {
+//     return graphQLProvider(
+//       MaterialApp(
+//         home: Home(),
+//         // initialRoute: "/users",
+//         // routes: {
+//         //   "/": (ctx) => Home(),
+//         //   // "/about": (ctx) => About(),
+//         //   // "/products": (ctx) => Products(),
+//         //   "/users": (ctx) => Users(),
+//         // },
+//       ),
+//     );
+//   }
+// }
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return GraphQLProvider(
+      client: GraphQLService.client,
+      child: MaterialApp(
+        // home: ItemListScreen(),
+        home: Home(),
+        routes: {
+          "/items": (ctx) => ItemListScreen(),
+          "/item": (ctx) => ItemById(),
+        },
+      ),
+    );
+  }
 }
 
 class Header extends StatelessWidget {
@@ -67,7 +110,7 @@ class Home extends StatelessWidget {
   const Home({super.key});
 
   @override
-  Widget build(BuildContext build) {
+  Widget build(BuildContext context) {
     return Scaffold(
       // appBar: AppBar(
       //   title: Text("This is my app"),
@@ -184,6 +227,16 @@ class Home extends StatelessWidget {
 
               // Body
               Text(" IMMA TEXT"),
+              Row(
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, "/items");
+                    },
+                    child: Text("Items"),
+                  ),
+                ],
+              ),
               CounterState(),
               FormInput(),
             ],

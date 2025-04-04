@@ -15,6 +15,8 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
 
+    // enableOnBackInvokedCallback="true"
+
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_11.toString()
     }

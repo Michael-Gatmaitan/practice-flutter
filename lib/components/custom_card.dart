@@ -20,7 +20,7 @@ class CustomCard extends StatelessWidget {
         color: Colors.purple[50],
       ),
       padding: EdgeInsets.only(top: 12, right: 12, bottom: 24, left: 24),
-      width: MediaQuery.of(build).size.width,
+      // width: MediaQuery.of(build).size.width,
       child: Column(
         spacing: 50,
         children: [
@@ -38,21 +38,22 @@ class CustomCard extends StatelessWidget {
               ),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.push(
-                    build,
-                    MaterialPageRoute<void>(
-                      builder: (BuildContext context) {
-                        return Scaffold(
-                          appBar: AppBar(title: Text("Sample route")),
-                          body: Center(
-                            child: Text(
-                              "TRhis is a centered texct in another page",
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  );
+                  Navigator.pushNamed(build, "/items");
+                  // Navigator.push(
+                  //   build,
+                  //   MaterialPageRoute<void>(
+                  //     builder: (BuildContext context) {
+                  //       return Scaffold(
+                  //         appBar: AppBar(title: Text("Sample route")),
+                  //         body: Center(
+                  //           child: Text(
+                  //             "TRhis is a centered texct in another page",
+                  //           ),
+                  //         ),
+                  //       );
+                  //     },
+                  //   ),
+                  // );
                 },
                 style: ElevatedButton.styleFrom(
                   fixedSize: Size(70, 70),
