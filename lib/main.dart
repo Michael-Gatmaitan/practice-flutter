@@ -1,6 +1,7 @@
 // import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:newflutter/components/forms.dart';
+import 'package:newflutter/routes/customers/customers.dart';
 import 'components/custom_card.dart';
 import 'components/counter_state.dart';
 // import 'routes/about.dart';
@@ -40,11 +41,11 @@ class MyApp extends StatelessWidget {
     return GraphQLProvider(
       client: GraphQLService.client,
       child: MaterialApp(
-        // home: ItemListScreen(),
         home: Home(),
         routes: {
           "/items": (ctx) => ItemListScreen(),
           "/item": (ctx) => ItemById(),
+          "/customers": (ctx) => CustomersScreen(),
         },
       ),
     );
@@ -106,16 +107,59 @@ class Card2BottomRightWidgetBar extends StatelessWidget {
   }
 }
 
-class Home extends StatelessWidget {
+class Home extends StatefulWidget {
   const Home({super.key});
+
+  @override
+  State<Home> createState() => _HomeState();
+}
+
+class _HomeState extends State<Home> {
+  int _selectedIndex = 0;
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    // if (index == 1) {
+    //     Navigator.pushNamed(context, '/items-list');
+    //   }
+    // }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(
-      //   title: Text("This is my app"),
-      //   backgroundColor: Colors.transparent,
-      // ),
+      appBar: AppBar(title: Text("This is my app")),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+        items: [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+          BottomNavigationBarItem(icon: Icon(Icons.list), label: "Items"),
+        ],
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              child: Text(
+                "Drawer Header",
+                style: TextStyle(fontSize: 24, color: Colors.black),
+              ),
+            ),
+            ListTile(
+              leading: Icon(Icons.account_circle),
+              title: Text("Profile"),
+              onTap: () {
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
+      ),
       body: SingleChildScrollView(
         child: Container(
           decoration: BoxDecoration(
@@ -234,6 +278,12 @@ class Home extends StatelessWidget {
                       Navigator.pushNamed(context, "/items");
                     },
                     child: Text("Items"),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, "/customers");
+                    },
+                    child: Text("Customers"),
                   ),
                 ],
               ),

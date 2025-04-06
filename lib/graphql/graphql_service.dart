@@ -5,7 +5,7 @@ class GraphQLService {
   // static final HttpLink httpLink = HttpLink("http://localhost:4000/graphql");
   static final HttpLink httpLink = HttpLink(
     // "http://192.168.100.9:4000/graphql",
-    "http://192.168.68.66:4000/graphql",
+    "http://192.168.100.9:4000/graphql",
   );
   static ValueNotifier<GraphQLClient> client = ValueNotifier(
     GraphQLClient(link: httpLink, cache: GraphQLCache()),

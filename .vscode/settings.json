@@ -1,0 +1,7 @@
+{
+  "vim.enabled": true,
+  "vim.useSystemClipboard": true,
+  "vim.highlightedyank.enable": true,
+  "vim.incsearch": true,
+  "vim.hlsearch": true
+}
