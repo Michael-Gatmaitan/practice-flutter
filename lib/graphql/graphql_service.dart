@@ -11,6 +11,7 @@ class GraphQLService {
     GraphQLClient(link: httpLink, cache: GraphQLCache()),
   );
 
+  //// ITEM QUERY ////
   static const String getItemsQuery = """
     query {
       items {
@@ -39,6 +40,7 @@ class GraphQLService {
     }
   """;
 
+  //// PURCHASE QUERY ////
   static const String getPurchasesQuery = """
     query {
       purchases {
@@ -69,6 +71,7 @@ class GraphQLService {
     }
   """;
 
+  //// CUSTOMER QUERY ////
   static const String getCustomersQuery = """
     query {
       customers {
@@ -104,37 +107,4 @@ class GraphQLService {
       }
     }
   """;
-
-  // type Customer {
-  //   customerID: Int!
-  //   fullName: String!
-  //   email: String!
-  //   mobile: Int!
-  //   phone2: Int!
-  //   address: String!
-  //   address2: String!
-  //   city: String!
-  //   district: String!
-  //   status: String!
-  //   createdOn: String!
-  // }
-
-  // static Future<QueryResult> fetchItems() async {
-  //   String query = """
-  //     query {
-  //       items {
-  //         productID
-  //         itemNumber
-  //         itemName
-  //         discount
-  //         stock
-  //         unitPrice
-  //         imageURL
-  //       }
-  //     }
-  //   """;
-  //
-  //   final QueryOptions options = QueryOptions(document: gql(query));
-  //   return await client.value.query(options);
-  // }
 }

@@ -120,11 +120,112 @@ class Purchase {
       vendorID: json["vendorID"] as int,
     );
   }
+}
 
-  List<Object> ensureTypes(dynamic result, String key) {
-    return (result.data?[key] as List<dynamic>?)
-            ?.map((json) => Purchase.fromJson(json as Map<String, dynamic>))
-            .toList() ??
-        [];
+class Sale {
+  final int saleID;
+  final String itemNumber;
+  final int customerID;
+  final String customerName;
+  final String itemName;
+  final String saleDate;
+  final double discount;
+  final int quantity;
+  final double unitPrice;
+
+  Sale({
+    required this.saleID,
+    required this.itemNumber,
+    required this.customerID,
+    required this.customerName,
+    required this.itemName,
+    required this.saleDate,
+    required this.discount,
+    required this.quantity,
+    required this.unitPrice,
+  });
+
+  factory Sale.fromJson(Map<String, dynamic> json) {
+    return Sale(
+      saleID: json["saleID"] as int,
+      itemNumber: json["itemNumber"] as String,
+      customerID: json["customerID"] as int,
+      customerName: json["customerName"] as String,
+      itemName: json["itemName"] as String,
+      saleDate: json["saleDate"] as String,
+      discount: json["discount"] as double,
+      quantity: json["quantity"] as int,
+      unitPrice: json["unitPrice"] as double,
+    );
+  }
+}
+
+class User {
+  final int userID;
+  final String fullName;
+  final String username;
+  final String password;
+  final String status;
+
+  User({
+    required this.userID,
+    required this.fullName,
+    required this.username,
+    required this.password,
+    required this.status,
+  });
+
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      userID: json["userID"] as int,
+      fullName: json["fullName"] as String,
+      username: json["username"] as String,
+      password: json["password"] as String,
+      status: json["status"] as String,
+    );
+  }
+}
+
+class Vendor {
+  final int vendorID;
+  final String fullName;
+  final String email;
+  final int mobile;
+  final int phone2;
+  final String address;
+  final String address2;
+  final String city;
+  final String district;
+  final String status;
+  final String createdOn;
+
+  Vendor({
+    required this.vendorID,
+    required this.fullName,
+    required this.email,
+    required this.mobile,
+    required this.phone2,
+    required this.address,
+    required this.address2,
+    required this.city,
+    required this.district,
+    required this.status,
+    required this.createdOn,
+  });
+
+  factory Vendor.fromJson(Map<String, dynamic> json) {
+    return Vendor(
+      vendorID: json['vendorID'] as int,
+      fullName: json['fullName'] as String,
+      email: json['email'] as String,
+      mobile: json['mobile'] as int,
+      phone2: json['phone2'] as int,
+      address: json['address'] as String,
+      address2: json['address2'] as String,
+      city: json['city'] as String,
+      district: json['district'] as String,
+      status: json['status'] as String,
+      createdOn: json['createdOn'] as String,
+    );
   }
 }

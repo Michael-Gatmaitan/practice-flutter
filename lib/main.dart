@@ -13,6 +13,8 @@ import 'routes/items/items.dart';
 // // import 'package:graphql_flutter/graphql_flutter.dart';
 // import 'package:hive_flutter/hive_flutter.dart'; // Import hive_flutter
 
+import 'routes/signup.dart';
+
 void main() async {
   runApp(MyApp());
 }
@@ -41,7 +43,8 @@ class MyApp extends StatelessWidget {
     return GraphQLProvider(
       client: GraphQLService.client,
       child: MaterialApp(
-        home: Home(),
+        // home: Home(),
+        home: SignupScreen(),
         routes: {
           "/items": (ctx) => ItemListScreen(),
           "/item": (ctx) => ItemById(),
