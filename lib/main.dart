@@ -1,5 +1,6 @@
 // import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:newflutter/auth/auth_provider.dart';
 import 'package:newflutter/components/forms.dart';
 import 'package:newflutter/routes/customers/customers.dart';
 import 'components/custom_card.dart';
@@ -14,41 +15,68 @@ import 'routes/items/items.dart';
 // import 'package:hive_flutter/hive_flutter.dart'; // Import hive_flutter
 
 import 'routes/signup.dart';
+import 'package:provider/provider.dart';
 
-void main() async {
-  runApp(MyApp());
-}
+// void main() async {
+//   WidgetsFlutterBinding.ensureInitialized();
+//   final authProvider = AuthProvider();
+//   await authProvider.loadToken();
+//
+//   runApp(ChangeNotifierProvider.value(value: authProvider, child: MyApp()));
+// }
 
 // class MyApp extends StatelessWidget {
 //   @override
 //   Widget build(BuildContext context) {
-//     return graphQLProvider(
-//       MaterialApp(
-//         home: Home(),
-//         // initialRoute: "/users",
-//         // routes: {
-//         //   "/": (ctx) => Home(),
-//         //   // "/about": (ctx) => About(),
-//         //   // "/products": (ctx) => Products(),
-//         //   "/users": (ctx) => Users(),
-//         // },
+//     final auth = Provider.of<AuthProvider>(context);
+//
+//     return GraphQLProvider(
+//       client: GraphQLService.client,
+//       child: MaterialApp(
+//         // home: Home(),
+//         home: auth.isLoggedIn ? Home() : SignupScreen(),
+//         routes: {
+//           "/items": (ctx) => ItemListScreen(),
+//           "/item": (ctx) => ItemById(),
+//           "/customers": (ctx) => CustomersScreen(),
+//         },
 //       ),
 //     );
 //   }
 // }
 
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Create and load AuthProvider before the app starts
+  final authProvider = AuthProvider();
+  await authProvider.loadToken();
+
+  runApp(MyApp(authProvider: authProvider));
+}
+
 class MyApp extends StatelessWidget {
+  final AuthProvider authProvider;
+
+  const MyApp({Key? key, required this.authProvider}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
-    return GraphQLProvider(
-      client: GraphQLService.client,
-      child: MaterialApp(
-        // home: Home(),
-        home: SignupScreen(),
-        routes: {
-          "/items": (ctx) => ItemListScreen(),
-          "/item": (ctx) => ItemById(),
-          "/customers": (ctx) => CustomersScreen(),
+    return ChangeNotifierProvider<AuthProvider>.value(
+      value: authProvider,
+      child: Consumer<AuthProvider>(
+        builder: (context, auth, _) {
+          return GraphQLProvider(
+            client: GraphQLService.client,
+            child: MaterialApp(
+              debugShowCheckedModeBanner: false,
+              title: 'Flutter Auth with GraphQL',
+              theme: ThemeData(primarySwatch: Colors.blue),
+              home: auth.isLoggedIn ? Home() : SignupScreen(),
+              // home: ItemListScreen(),
+              routes: {"/item": (ctx) => ItemById()},
+            ),
+          );
         },
       ),
     );

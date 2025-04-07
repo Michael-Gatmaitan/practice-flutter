@@ -107,4 +107,14 @@ class GraphQLService {
       }
     }
   """;
+
+  //// USER MUTATION ////
+  static const String signupMutation = r"""
+    mutation Signup($fullname: String!, $username: String!, $password: String!) {
+      signup(fullname: $fullname, username: $username, password: $password) {
+        token
+        error
+      }
+    }
+  """;
 }
