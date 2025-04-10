@@ -1,49 +1,15 @@
-// import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:newflutter/auth/auth_actions.dart';
 import 'package:newflutter/auth/auth_provider.dart';
-import 'package:newflutter/components/forms.dart';
-import 'package:newflutter/routes/customers/customers.dart';
 import 'components/custom_card.dart';
-import 'components/counter_state.dart';
-// import 'routes/about.dart';
-// import 'routes/products/products.dart';
-// import 'routes/users/main.dart';
+// import 'components/counter_state.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'graphql/graphql_service.dart';
 import 'routes/items/items.dart';
-// // import 'package:graphql_flutter/graphql_flutter.dart';
-// import 'package:hive_flutter/hive_flutter.dart'; // Import hive_flutter
-
-import 'routes/signup.dart';
+import 'routes/auths/login.dart';
+import 'routes/auths/signup.dart';
 import 'package:provider/provider.dart';
-
-// void main() async {
-//   WidgetsFlutterBinding.ensureInitialized();
-//   final authProvider = AuthProvider();
-//   await authProvider.loadToken();
-//
-//   runApp(ChangeNotifierProvider.value(value: authProvider, child: MyApp()));
-// }
-
-// class MyApp extends StatelessWidget {
-//   @override
-//   Widget build(BuildContext context) {
-//     final auth = Provider.of<AuthProvider>(context);
-//
-//     return GraphQLProvider(
-//       client: GraphQLService.client,
-//       child: MaterialApp(
-//         // home: Home(),
-//         home: auth.isLoggedIn ? Home() : SignupScreen(),
-//         routes: {
-//           "/items": (ctx) => ItemListScreen(),
-//           "/item": (ctx) => ItemById(),
-//           "/customers": (ctx) => CustomersScreen(),
-//         },
-//       ),
-//     );
-//   }
-// }
+import 'auth/session.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -57,7 +23,6 @@ void main() async {
 
 class MyApp extends StatelessWidget {
   final AuthProvider authProvider;
-
   const MyApp({Key? key, required this.authProvider}) : super(key: key);
 
   @override
@@ -72,9 +37,16 @@ class MyApp extends StatelessWidget {
               debugShowCheckedModeBanner: false,
               title: 'Flutter Auth with GraphQL',
               theme: ThemeData(primarySwatch: Colors.blue),
-              home: auth.isLoggedIn ? Home() : SignupScreen(),
+              home: auth.isLoggedIn ? Home() : LoginScreen(),
               // home: ItemListScreen(),
-              routes: {"/item": (ctx) => ItemById()},
+              routes: {
+                "/item": (ctx) => ItemById(),
+                "/items": (ctx) => ItemListScreen(),
+                "/login": (ctx) => LoginScreen(),
+                "/signup": (ctx) => SignupScreen(),
+                //           "/item": (ctx) => ItemById(),
+                //           "/customers": (ctx) => CustomersScreen(),
+              },
             ),
           );
         },
@@ -83,59 +55,43 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class Header extends StatelessWidget {
-  const Header({super.key});
-
-  @override
-  Widget build(BuildContext build) {
-    return Container(
-      margin: EdgeInsets.only(top: 80, bottom: 60, left: 24, right: 24),
-      child: Column(
-        spacing: 18,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Global Partners",
-            style: TextStyle(
-              letterSpacing: -2.5,
-              fontFamily: "Montserrat",
-              fontWeight: FontWeight.w600,
-              fontSize: 40,
-            ),
+Widget header() {
+  return Container(
+    margin: EdgeInsets.only(top: 80, bottom: 60, left: 24, right: 24),
+    child: Column(
+      spacing: 18,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Global Partners",
+          style: TextStyle(
+            letterSpacing: -2.5,
+            fontFamily: "Montserrat",
+            fontWeight: FontWeight.w600,
+            fontSize: 40,
           ),
-          Text(
-            "Agency that build many amazing product\nto boost your business to next level",
-            style: TextStyle(
-              fontFamily: "Montserrat",
-              fontWeight: FontWeight.w600,
-            ),
+        ),
+        Text(
+          "Agency that build many amazing product\nto boost your business to next level",
+          style: TextStyle(
+            fontFamily: "Montserrat",
+            fontWeight: FontWeight.w600,
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
 }
 
-class Card2BottomRightWidgetBar extends StatelessWidget {
-  final double height;
-  final Color color;
-  const Card2BottomRightWidgetBar({
-    required this.height,
-    required this.color,
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 10,
-      height: height,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(10),
-      ),
-    );
-  }
+Widget card2BottomRightWidgetBar(double height, Color color) {
+  return Container(
+    width: 10,
+    height: height,
+    decoration: BoxDecoration(
+      color: color,
+      borderRadius: BorderRadius.circular(10),
+    ),
+  );
 }
 
 class Home extends StatefulWidget {
@@ -147,16 +103,30 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   int _selectedIndex = 0;
+  Map<String, dynamic>? user;
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
+  }
 
-    // if (index == 1) {
-    //     Navigator.pushNamed(context, '/items-list');
-    //   }
-    // }
+  static const List<Widget> _widgetOptions = [Text("0: Hello"), Text("1: Hi")];
+
+  @override
+  void initState() {
+    super.initState();
+    print("???");
+    loadUser();
+  }
+
+  void loadUser() async {
+    print("Loaduser call");
+    final userData = await getUserInfo();
+    print(userData);
+    setState(() {
+      user = userData;
+    });
   }
 
   @override
@@ -172,20 +142,71 @@ class _HomeState extends State<Home> {
         ],
       ),
       drawer: Drawer(
+        backgroundColor: Colors.white,
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
             DrawerHeader(
-              child: Text(
-                "Drawer Header",
-                style: TextStyle(fontSize: 24, color: Colors.black),
-              ),
+              child:
+                  user == null
+                      ? CircularProgressIndicator()
+                      : Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        spacing: 12,
+                        children: [
+                          CircleAvatar(
+                            backgroundColor: Colors.black,
+                            foregroundColor: Colors.blue,
+                            maxRadius: 30,
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(user!["username"] ?? "Username"),
+                              Text("Fullname"),
+                            ],
+                          ),
+                        ],
+                      ),
             ),
+            ListTile(title: _widgetOptions[_selectedIndex]),
             ListTile(
               leading: Icon(Icons.account_circle),
               title: Text("Profile"),
               onTap: () {
+                setState(() {
+                  _selectedIndex = 0;
+                });
                 Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.shopping_basket),
+              title: Text("Items"),
+              onTap: () {
+                setState(() {
+                  _selectedIndex = 1;
+                });
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.shopping_basket),
+              title: Text("Forecast products"),
+              onTap: () {
+                setState(() {
+                  _selectedIndex = 2;
+                });
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.logout),
+              title: Text("Logout"),
+              onTap: () {
+                final auth = Provider.of<AuthProvider>(context, listen: false);
+                auth.logout();
               },
             ),
           ],
@@ -207,7 +228,7 @@ class _HomeState extends State<Home> {
             // List of elements inside
             spacing: 4,
             children: [
-              Header(),
+              header(),
               CustomCard(
                 headerText: "Companies\nJoined us",
                 hightlightText: "300+",
@@ -281,16 +302,16 @@ class _HomeState extends State<Home> {
                   spacing: 6,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Card2BottomRightWidgetBar(height: 25, color: Colors.red),
-                    Card2BottomRightWidgetBar(height: 35, color: Colors.black),
-                    Card2BottomRightWidgetBar(height: 17, color: Colors.red),
-                    Card2BottomRightWidgetBar(height: 25, color: Colors.black),
-                    Card2BottomRightWidgetBar(height: 15, color: Colors.red),
-                    Card2BottomRightWidgetBar(height: 30, color: Colors.black),
-                    Card2BottomRightWidgetBar(height: 25, color: Colors.red),
-                    Card2BottomRightWidgetBar(height: 35, color: Colors.black),
-                    Card2BottomRightWidgetBar(height: 15, color: Colors.red),
-                    Card2BottomRightWidgetBar(height: 35, color: Colors.black),
+                    card2BottomRightWidgetBar(25, Colors.red),
+                    card2BottomRightWidgetBar(35, Colors.black),
+                    card2BottomRightWidgetBar(17, Colors.red),
+                    card2BottomRightWidgetBar(25, Colors.black),
+                    card2BottomRightWidgetBar(15, Colors.red),
+                    card2BottomRightWidgetBar(30, Colors.black),
+                    card2BottomRightWidgetBar(25, Colors.red),
+                    card2BottomRightWidgetBar(35, Colors.black),
+                    card2BottomRightWidgetBar(15, Colors.red),
+                    card2BottomRightWidgetBar(35, Colors.black),
                   ],
                 ),
               ),
@@ -299,27 +320,8 @@ class _HomeState extends State<Home> {
                 hightlightText: "X.X",
                 bottomRightWidget: Container(width: 100, height: 100),
               ),
-
               // Body
-              Text(" IMMA TEXT"),
-              Row(
-                children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, "/items");
-                    },
-                    child: Text("Items"),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, "/customers");
-                    },
-                    child: Text("Customers"),
-                  ),
-                ],
-              ),
-              CounterState(),
-              FormInput(),
+              // CounterState(),
             ],
           ),
         ),

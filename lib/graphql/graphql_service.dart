@@ -5,6 +5,7 @@ class GraphQLService {
   // static final HttpLink httpLink = HttpLink("http://localhost:4000/graphql");
   static final HttpLink httpLink = HttpLink(
     // "http://192.168.100.9:4000/graphql",
+    // "http://192.168.1.82:4000/graphql",
     "http://192.168.100.9:4000/graphql",
   );
   static ValueNotifier<GraphQLClient> client = ValueNotifier(
@@ -108,6 +109,15 @@ class GraphQLService {
     }
   """;
 
+  static const String meQuery = r"""
+    query {
+        me {
+            fullName
+            username
+          }
+      }
+  """;
+
   //// USER MUTATION ////
   static const String signupMutation = r"""
     mutation Signup($fullname: String!, $username: String!, $password: String!) {
@@ -116,5 +126,14 @@ class GraphQLService {
         error
       }
     }
+  """;
+
+  static const String loginMutation = r"""
+    mutation Login($username: String!, $password: String!) {
+        login(username: $username, password: $password) {
+            token
+            error
+          }
+      }
   """;
 }
