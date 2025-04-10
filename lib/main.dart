@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:newflutter/auth/auth_actions.dart';
+// import 'package:newflutter/auth/auth_actions.dart';
 import 'package:newflutter/auth/auth_provider.dart';
 import 'components/custom_card.dart';
 // import 'components/counter_state.dart';
@@ -21,14 +21,29 @@ void main() async {
   runApp(MyApp(authProvider: authProvider));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   final AuthProvider authProvider;
-  const MyApp({Key? key, required this.authProvider}) : super(key: key);
+  const MyApp({super.key, required this.authProvider});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  // const MyApp({super.key, required this.authProvider});
+
+  ThemeMode _themeMode = ThemeMode.light;
+
+  void toggleTheme(bool isDark) {
+    setState(() {
+      _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider<AuthProvider>.value(
-      value: authProvider,
+      value: widget.authProvider,
       child: Consumer<AuthProvider>(
         builder: (context, auth, _) {
           return GraphQLProvider(
@@ -36,8 +51,14 @@ class MyApp extends StatelessWidget {
             child: MaterialApp(
               debugShowCheckedModeBanner: false,
               title: 'Flutter Auth with GraphQL',
-              theme: ThemeData(primarySwatch: Colors.blue),
-              home: auth.isLoggedIn ? Home() : LoginScreen(),
+              // theme: ThemeData(primarySwatch: Colors.blue),
+              theme: ThemeData.light(),
+              darkTheme: ThemeData.dark(),
+              themeMode: _themeMode,
+              home:
+                  auth.isLoggedIn
+                      ? Home(onToggleTheme: toggleTheme)
+                      : LoginScreen(),
               // home: ItemListScreen(),
               routes: {
                 "/item": (ctx) => ItemById(),
@@ -95,7 +116,8 @@ Widget card2BottomRightWidgetBar(double height, Color color) {
 }
 
 class Home extends StatefulWidget {
-  const Home({super.key});
+  final void Function(bool) onToggleTheme;
+  const Home({super.key, required this.onToggleTheme});
 
   @override
   State<Home> createState() => _HomeState();
@@ -111,19 +133,18 @@ class _HomeState extends State<Home> {
     });
   }
 
-  static const List<Widget> _widgetOptions = [Text("0: Hello"), Text("1: Hi")];
+  // static const List<Widget> _widgetOptions = [Text("0: Hello"), Text("1: Hi")];
 
   @override
   void initState() {
     super.initState();
-    print("???");
     loadUser();
   }
 
+  // onToggleTheme: toggleTheme
+
   void loadUser() async {
-    print("Loaduser call");
     final userData = await getUserInfo();
-    print(userData);
     setState(() {
       user = userData;
     });
@@ -135,14 +156,23 @@ class _HomeState extends State<Home> {
       appBar: AppBar(title: Text("This is my app")),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
+        selectedItemColor: Colors.blue,
         onTap: _onItemTapped,
         items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(icon: Icon(Icons.list), label: "Items"),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: "Home",
+            backgroundColor: Colors.red,
+          ),
+          BottomNavigationBarItem(icon: Icon(Icons.list), label: "List"),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Settings',
+            backgroundColor: Colors.pink,
+          ),
         ],
       ),
       drawer: Drawer(
-        backgroundColor: Colors.white,
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
@@ -155,11 +185,7 @@ class _HomeState extends State<Home> {
                         mainAxisAlignment: MainAxisAlignment.start,
                         spacing: 12,
                         children: [
-                          CircleAvatar(
-                            backgroundColor: Colors.black,
-                            foregroundColor: Colors.blue,
-                            maxRadius: 30,
-                          ),
+                          CircleAvatar(maxRadius: 30),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -170,7 +196,7 @@ class _HomeState extends State<Home> {
                         ],
                       ),
             ),
-            ListTile(title: _widgetOptions[_selectedIndex]),
+            // ListTile(title: _widgetOptions[_selectedIndex]),
             ListTile(
               leading: Icon(Icons.account_circle),
               title: Text("Profile"),
@@ -200,6 +226,13 @@ class _HomeState extends State<Home> {
                 });
                 Navigator.pop(context);
               },
+            ),
+            ListTile(
+              title: const Text("Dark Mode"),
+              trailing: Switch(
+                value: Theme.of(context).brightness == Brightness.dark,
+                onChanged: widget.onToggleTheme,
+              ),
             ),
             ListTile(
               leading: Icon(Icons.logout),

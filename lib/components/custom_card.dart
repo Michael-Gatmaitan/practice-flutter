@@ -17,7 +17,8 @@ class CustomCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        color: Colors.purple[50],
+
+        // color: Colors.purple[50],
       ),
       padding: EdgeInsets.only(top: 12, right: 12, bottom: 24, left: 24),
       // width: MediaQuery.of(build).size.width,

@@ -73,6 +73,7 @@ class SignupScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
+      drawerScrimColor: Colors.cyan,
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
         centerTitle: true,
