@@ -64,7 +64,7 @@ class ItemListScreen extends StatelessWidget {
                         children: [
                           Positioned.fill(
                             child: Image.network(
-                              "http://192.168.100.9/imsa/data/item_images/${item.imageURL}",
+                              "${GraphQLService.baseUrl}/imsa/data/item_images/${item.imageURL}",
                               fit: BoxFit.fill,
                               color: Colors.blueGrey,
                               colorBlendMode: BlendMode.multiply,

@@ -63,11 +63,9 @@ class AuthAction {
     );
 
     final data = result.data?["signup"];
-    // print(data);
     if (data != null && data['token'] != null) {
       await auth.saveToken(data['token']);
     } else {
-      // if(!mounted)
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(data?["error"] ?? "Signup failed")),

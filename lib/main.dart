@@ -10,6 +10,8 @@ import 'routes/auths/login.dart';
 import 'routes/auths/signup.dart';
 import 'package:provider/provider.dart';
 import 'auth/session.dart';
+// import "package:mobile";
+import 'package:mobile_scanner/mobile_scanner.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,6 +21,29 @@ void main() async {
   await authProvider.loadToken();
 
   runApp(MyApp(authProvider: authProvider));
+}
+
+class QRScannerScreen extends StatelessWidget {
+  QRScannerScreen({super.key});
+
+  final MobileScannerController cameraController = MobileScannerController();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('QR Scanner')),
+      body: MobileScanner(
+        controller: cameraController,
+        onDetect: (capture) {
+          final List<Barcode> barcodes = capture.barcodes;
+          for (final barcode in barcodes) {
+            debugPrint('Barcode found! ${barcode.rawValue}');
+            print("Barcode found! ${barcode.rawValue}");
+          }
+        },
+      ),
+    );
+  }
 }
 
 class MyApp extends StatefulWidget {
@@ -57,7 +82,8 @@ class _MyAppState extends State<MyApp> {
               themeMode: _themeMode,
               home:
                   auth.isLoggedIn
-                      ? Home(onToggleTheme: toggleTheme)
+                      // ? Home(onToggleTheme: toggleTheme)
+                      ? QRScannerScreen()
                       : LoginScreen(),
               // home: ItemListScreen(),
               routes: {
@@ -166,8 +192,8 @@ class _HomeState extends State<Home> {
           ),
           BottomNavigationBarItem(icon: Icon(Icons.list), label: "List"),
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
+            icon: Icon(Icons.code),
+            label: 'Scan',
             backgroundColor: Colors.pink,
           ),
         ],
@@ -198,6 +224,13 @@ class _HomeState extends State<Home> {
             ),
             // ListTile(title: _widgetOptions[_selectedIndex]),
             ListTile(
+              title: const Text("Dark Mode"),
+              trailing: Switch(
+                value: Theme.of(context).brightness == Brightness.dark,
+                onChanged: widget.onToggleTheme,
+              ),
+            ),
+            ListTile(
               leading: Icon(Icons.account_circle),
               title: Text("Profile"),
               onTap: () {
@@ -215,6 +248,7 @@ class _HomeState extends State<Home> {
                   _selectedIndex = 1;
                 });
                 Navigator.pop(context);
+                Navigator.pushNamed(context, "/items");
               },
             ),
             ListTile(
@@ -226,13 +260,6 @@ class _HomeState extends State<Home> {
                 });
                 Navigator.pop(context);
               },
-            ),
-            ListTile(
-              title: const Text("Dark Mode"),
-              trailing: Switch(
-                value: Theme.of(context).brightness == Brightness.dark,
-                onChanged: widget.onToggleTheme,
-              ),
             ),
             ListTile(
               leading: Icon(Icons.logout),
