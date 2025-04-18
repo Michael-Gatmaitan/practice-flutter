@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 // import 'package:newflutter/auth/auth_actions.dart';
 import 'package:newflutter/auth/auth_provider.dart';
+import 'package:newflutter/components/_forms.dart';
+import 'package:newflutter/routes/inventory-action/generateqr.dart';
+import 'package:newflutter/routes/inventory-action/in/screen.dart';
+import 'package:newflutter/routes/inventory-action/out/screen.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'components/custom_card.dart';
 // import 'components/counter_state.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
@@ -10,8 +15,9 @@ import 'routes/auths/login.dart';
 import 'routes/auths/signup.dart';
 import 'package:provider/provider.dart';
 import 'auth/session.dart';
+import 'dart:convert';
 // import "package:mobile";
-import 'package:mobile_scanner/mobile_scanner.dart';
+import 'routes/inventory-action/qrscanner.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,29 +27,6 @@ void main() async {
   await authProvider.loadToken();
 
   runApp(MyApp(authProvider: authProvider));
-}
-
-class QRScannerScreen extends StatelessWidget {
-  QRScannerScreen({super.key});
-
-  final MobileScannerController cameraController = MobileScannerController();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('QR Scanner')),
-      body: MobileScanner(
-        controller: cameraController,
-        onDetect: (capture) {
-          final List<Barcode> barcodes = capture.barcodes;
-          for (final barcode in barcodes) {
-            debugPrint('Barcode found! ${barcode.rawValue}');
-            print("Barcode found! ${barcode.rawValue}");
-          }
-        },
-      ),
-    );
-  }
 }
 
 class MyApp extends StatefulWidget {
@@ -65,6 +48,8 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
+  // Future<void> getItem() {}
+
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider<AuthProvider>.value(
@@ -76,14 +61,16 @@ class _MyAppState extends State<MyApp> {
             child: MaterialApp(
               debugShowCheckedModeBanner: false,
               title: 'Flutter Auth with GraphQL',
-              // theme: ThemeData(primarySwatch: Colors.blue),
+              themeAnimationCurve: Curves.easeInExpo,
+              themeAnimationDuration: Duration(milliseconds: 100),
               theme: ThemeData.light(),
               darkTheme: ThemeData.dark(),
               themeMode: _themeMode,
               home:
                   auth.isLoggedIn
-                      // ? Home(onToggleTheme: toggleTheme)
-                      ? QRScannerScreen()
+                      // ? ItemInScreen()
+                      ? Home(onToggleTheme: toggleTheme)
+                      // ? QRScannerScreen()
                       : LoginScreen(),
               // home: ItemListScreen(),
               routes: {
@@ -91,6 +78,12 @@ class _MyAppState extends State<MyApp> {
                 "/items": (ctx) => ItemListScreen(),
                 "/login": (ctx) => LoginScreen(),
                 "/signup": (ctx) => SignupScreen(),
+
+                "/item-in": (ctx) => ItemInScreen(),
+                "/item-out": (ctx) => ItemOutScreen(),
+                "/generateqr": (ctx) => GenerateQRScreen(),
+                "/scanqr": (ctx) => QRScannerScreen(),
+                // "/inventory-action": (ctx) => InventoryActionScreen(),
                 //           "/item": (ctx) => ItemById(),
                 //           "/customers": (ctx) => CustomersScreen(),
               },
@@ -151,11 +144,19 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   int _selectedIndex = 0;
+  int _selectedBottomIndex = 0;
+
   Map<String, dynamic>? user;
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
+    });
+  }
+
+  void _onBottomTapped(int index) {
+    setState(() {
+      _selectedBottomIndex = index;
     });
   }
 
@@ -176,31 +177,49 @@ class _HomeState extends State<Home> {
     });
   }
 
+  static final List<String> _titles = [
+    "Home",
+    "Inventory actions",
+    "Transactions",
+  ];
+
+  static final List<Widget> _widgetBottomOptions = [
+    homeBody(),
+    QrActionBody(),
+    transactionsBody(),
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("This is my app")),
+      appBar: AppBar(title: Text(_titles[_selectedBottomIndex])),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
+        currentIndex: _selectedBottomIndex,
+        // backgroundColor: Colors.red,
         selectedItemColor: Colors.blue,
-        onTap: _onItemTapped,
+        onTap: _onBottomTapped,
         items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
             label: "Home",
             backgroundColor: Colors.red,
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.list), label: "List"),
           BottomNavigationBarItem(
-            icon: Icon(Icons.code),
-            label: 'Scan',
+            icon: Icon(Icons.inventory_2_outlined),
+            activeIcon: Icon(Icons.inventory_2),
+            label: "Actions",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.percent),
+            label: 'Transactions',
             backgroundColor: Colors.pink,
           ),
         ],
       ),
       drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
+        child: Column(
+          // padding: EdgeInsets.zero,
           children: [
             DrawerHeader(
               child:
@@ -215,8 +234,15 @@ class _HomeState extends State<Home> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(user!["username"] ?? "Username"),
-                              Text("Fullname"),
+                              Text(
+                                user!["username"] ?? "Username",
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text("Admin"),
+                              // Text(user!["id"] ?? "Null Fullname"),
                             ],
                           ),
                         ],
@@ -224,9 +250,19 @@ class _HomeState extends State<Home> {
             ),
             // ListTile(title: _widgetOptions[_selectedIndex]),
             ListTile(
-              title: const Text("Dark Mode"),
+              leading: Icon(
+                Theme.of(context).brightness == Brightness.dark
+                    ? Icons.dark_mode
+                    : Icons.light_mode,
+              ),
+              title: Text(
+                Theme.of(context).brightness == Brightness.dark
+                    ? "Dark Mode"
+                    : "Light Mode",
+              ),
               trailing: Switch(
                 value: Theme.of(context).brightness == Brightness.dark,
+                // leading: Icon(Icons.sunny),
                 onChanged: widget.onToggleTheme,
               ),
             ),
@@ -252,16 +288,27 @@ class _HomeState extends State<Home> {
               },
             ),
             ListTile(
-              leading: Icon(Icons.shopping_basket),
+              leading: Icon(Icons.auto_graph),
               title: Text("Forecast products"),
               onTap: () {
-                setState(() {
-                  _selectedIndex = 2;
-                });
+                // setState(() {
+                //   _selectedIndex = 2;
+                // });
                 Navigator.pop(context);
               },
             ),
             ListTile(
+              leading: Icon(Icons.qr_code_scanner),
+              title: Text("Scan QR Code"),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, "/scanqr");
+              },
+            ),
+            Expanded(flex: 1, child: SizedBox()),
+            ListTile(
+              iconColor: Colors.red[400],
+              textColor: Colors.red[400],
               leading: Icon(Icons.logout),
               title: Text("Logout"),
               onTap: () {
@@ -269,123 +316,183 @@ class _HomeState extends State<Home> {
                 auth.logout();
               },
             ),
+            SizedBox(height: 48),
           ],
         ),
       ),
-      body: SingleChildScrollView(
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Colors.purple[100]!, Colors.blue[200]!],
+      body: _widgetBottomOptions[_selectedBottomIndex],
+    );
+  }
+}
+
+Widget homeBody() {
+  return SingleChildScrollView(
+    child: Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Colors.purple[100]!, Colors.blue[200]!],
+        ),
+      ),
+      // This is the body
+      padding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        // List of elements inside
+        spacing: 4,
+        children: [
+          header(),
+          CustomCard(
+            headerText: "Companies\nJoined us",
+            hightlightText: "300+",
+            bottomRightWidget: Stack(
+              clipBehavior: Clip.none,
+              // alignment: AlignmentDirectional.bottomEnd,
+              children: [
+                Positioned(
+                  child: Container(
+                    height: 45,
+                    width: 45,
+                    padding: EdgeInsets.all(3),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(200),
+                      color: Colors.white,
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(100),
+                      child: Image.asset("assets/tina.jpg", fit: BoxFit.cover),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  right: 30,
+                  child: Container(
+                    height: 45,
+                    width: 45,
+                    padding: EdgeInsets.all(3),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(200),
+                      color: Colors.white,
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(100),
+                      child: Image.asset("assets/tina.jpg", fit: BoxFit.cover),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  right: 60,
+                  child: Container(
+                    height: 45,
+                    width: 45,
+                    padding: EdgeInsets.all(3),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(200),
+                      color: Colors.white,
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(100),
+                      child: Image.asset("assets/tina.jpg", fit: BoxFit.cover),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-          // This is the body
-          padding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            // List of elements inside
-            spacing: 4,
+          CustomCard(
+            headerText: "Exclusive\nBudget 55,000",
+            hightlightText: "45M",
+            bottomRightWidget: Row(
+              spacing: 6,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                card2BottomRightWidgetBar(25, Colors.red),
+                card2BottomRightWidgetBar(35, Colors.black),
+                card2BottomRightWidgetBar(17, Colors.red),
+                card2BottomRightWidgetBar(25, Colors.black),
+                card2BottomRightWidgetBar(15, Colors.red),
+                card2BottomRightWidgetBar(30, Colors.black),
+                card2BottomRightWidgetBar(25, Colors.red),
+                card2BottomRightWidgetBar(35, Colors.black),
+                card2BottomRightWidgetBar(15, Colors.red),
+                card2BottomRightWidgetBar(35, Colors.black),
+              ],
+            ),
+          ),
+          CustomCard(
+            headerText: "Inventing the future\nof design",
+            hightlightText: "X.X",
+            bottomRightWidget: SizedBox(width: 100, height: 100),
+          ),
+          QrImageView(data: json.encode({"itemName": "HOTDOG"})),
+          // Body
+          // CounterState(),
+        ],
+      ),
+    ),
+  );
+}
+
+// Widget qrActionBody() {
+// }
+
+class QrActionBody extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: EdgeInsets.symmetric(horizontal: 12),
+
+      child: Column(
+        children: [
+          Row(
             children: [
-              header(),
-              CustomCard(
-                headerText: "Companies\nJoined us",
-                hightlightText: "300+",
-                bottomRightWidget: Stack(
-                  clipBehavior: Clip.none,
-                  // alignment: AlignmentDirectional.bottomEnd,
-                  children: [
-                    Positioned(
-                      child: Container(
-                        height: 45,
-                        width: 45,
-                        padding: EdgeInsets.all(3),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(200),
-                          color: Colors.white,
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(100),
-                          child: Image.asset(
-                            "assets/tina.jpg",
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      right: 30,
-                      child: Container(
-                        height: 45,
-                        width: 45,
-                        padding: EdgeInsets.all(3),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(200),
-                          color: Colors.white,
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(100),
-                          child: Image.asset(
-                            "assets/tina.jpg",
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      right: 60,
-                      child: Container(
-                        height: 45,
-                        width: 45,
-                        padding: EdgeInsets.all(3),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(200),
-                          color: Colors.white,
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(100),
-                          child: Image.asset(
-                            "assets/tina.jpg",
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+              Expanded(
+                flex: 1,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, "/item-in");
+                  },
+                  style: btnStyle("pri"),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.qr_code),
+                      SizedBox(width: 6),
+                      Text("In"),
+                    ],
+                  ),
                 ),
               ),
-              CustomCard(
-                headerText: "Exclusive\nBudget 55,000",
-                hightlightText: "45M",
-                bottomRightWidget: Row(
-                  spacing: 6,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    card2BottomRightWidgetBar(25, Colors.red),
-                    card2BottomRightWidgetBar(35, Colors.black),
-                    card2BottomRightWidgetBar(17, Colors.red),
-                    card2BottomRightWidgetBar(25, Colors.black),
-                    card2BottomRightWidgetBar(15, Colors.red),
-                    card2BottomRightWidgetBar(30, Colors.black),
-                    card2BottomRightWidgetBar(25, Colors.red),
-                    card2BottomRightWidgetBar(35, Colors.black),
-                    card2BottomRightWidgetBar(15, Colors.red),
-                    card2BottomRightWidgetBar(35, Colors.black),
-                  ],
+              SizedBox(width: 12),
+              Expanded(
+                flex: 1,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, "/item-out");
+                  },
+                  style: btnStyle("sec"),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.qr_code),
+                      SizedBox(width: 6),
+                      Text("Out"),
+                    ],
+                  ),
                 ),
               ),
-              CustomCard(
-                headerText: "Inventing the future\nof design",
-                hightlightText: "X.X",
-                bottomRightWidget: Container(width: 100, height: 100),
-              ),
-              // Body
-              // CounterState(),
             ],
           ),
-        ),
+        ],
       ),
     );
   }
+}
+
+Widget transactionsBody() {
+  return SingleChildScrollView(
+    padding: EdgeInsets.symmetric(horizontal: 12),
+    child: Text("Transactions"),
+  );
 }

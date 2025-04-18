@@ -8,14 +8,10 @@ ButtonStyle btnStyle(String type) {
       fontSize: 16,
       fontWeight: FontWeight.w600,
     ),
-    // minimumSize: Size(height: 50),
     padding: EdgeInsets.symmetric(vertical: 12),
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(12),
-      side:
-          type == "pri"
-              ? BorderSide.none
-              : BorderSide(width: 2, color: Colors.grey),
+      side: BorderSide.none,
     ),
     foregroundColor: Colors.white,
   );
@@ -26,13 +22,16 @@ ButtonStyle btnStyle(String type) {
 Widget buildTextField({
   required TextEditingController controller,
   required String label,
+  bool isNumber = false,
   bool isPassword = false,
-  String validatorMessage = "This field is required",
+  Color textColor = Colors.black,
+  String validatorMessage = "This field is required.",
 }) {
   return TextFormField(
     controller: controller,
     obscureText: isPassword,
-    style: TextStyle(color: Colors.white, fontFamily: "Montserrat"),
+    keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+    style: TextStyle(color: textColor, fontFamily: "Montserrat"),
     decoration: InputDecoration(
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       hintText: label,

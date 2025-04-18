@@ -28,17 +28,20 @@ class _SignupFormState extends State<SignupForm> {
             buildTextField(
               controller: fullnameController,
               label: "Fullname",
+              textColor: Colors.white,
               validatorMessage: "Fullname is required.",
             ),
             buildTextField(
               controller: usernameController,
               label: "Username",
+              textColor: Colors.white,
               validatorMessage: "Username is required",
             ),
             buildTextField(
               controller: passwordController,
               isPassword: true,
               label: "Password",
+              textColor: Colors.white,
               validatorMessage: "Please enter password.",
             ),
             SizedBox(height: 12),

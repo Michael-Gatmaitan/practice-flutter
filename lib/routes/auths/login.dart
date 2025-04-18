@@ -20,7 +20,6 @@ class _LoginFormState extends State<LoginForm> {
   Widget build(BuildContext context) {
     return Form(
       key: _formKey,
-      autovalidateMode: AutovalidateMode.always,
       child: Column(
         spacing: 12,
         children: [
@@ -28,12 +27,14 @@ class _LoginFormState extends State<LoginForm> {
           buildTextField(
             controller: usernameController,
             label: "Username",
+            textColor: Colors.white,
             validatorMessage: "Username is required",
           ),
           buildTextField(
             controller: passwordController,
             isPassword: true,
             label: "Password",
+            textColor: Colors.white,
             validatorMessage: "Please enter password.",
           ),
           SizedBox(height: 12),
@@ -108,19 +109,6 @@ class LoginScreen extends StatelessWidget {
                       fontFamily: "Montserrat",
                     ),
                   ),
-                  // Container(
-                  //   margin: EdgeInsets.only(top: 12),
-                  //   child: Text(
-                  //     textAlign: TextAlign.center,
-                  //     "",
-                  //
-                  //     style: TextStyle(
-                  //       fontSize: 16,
-                  //       color: Colors.white54,
-                  //       fontFamily: "Montserrat",
-                  //     ),
-                  //   ),
-                  // ),
                   LoginForm(),
                 ],
               ),

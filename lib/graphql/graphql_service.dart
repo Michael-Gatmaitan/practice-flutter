@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 
 class GraphQLService {
   // static final baseUrl = "http://172.16.1.247";
-  static final String baseUrl = "http://192.168.0.111";
+  // static final String baseUrl = "http://192.168.0.111";
+  static final String baseUrl = "http://192.168.100.9";
   // static final HttpLink httpLink = HttpLink("http://localhost:4000/graphql");
   static final HttpLink httpLink = HttpLink(
     // "http://192.168.100.9:4000/graphql",
@@ -115,9 +116,9 @@ class GraphQLService {
   static const String meQuery = r"""
     query {
         me {
-            fullName
-            username
-          }
+          fullName
+          username
+        }
       }
   """;
 
@@ -134,9 +135,19 @@ class GraphQLService {
   static const String loginMutation = r"""
     mutation Login($username: String!, $password: String!) {
         login(username: $username, password: $password) {
-            token
-            error
-          }
+          token
+          error
+        }
       }
+  """;
+
+  //// ITEM MUTATION ////
+  static const String createItemMutation = r"""
+    mutation CreateItem($itemNumber: Int!, $itemName: String!, $discount: Float!, $stock: Int!, $unitPrice: Int!, $imageURL: String!, $description: String!) {
+      createItem(itemNumber: $itemNumber, itemName: $itemName, discount: $discount, stock: $stock, unitPrice: $unitPrice, imageURL: $imageURL, description: $description) {
+        message
+        success
+      }
+    }
   """;
 }
