@@ -2,10 +2,14 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:flutter/material.dart';
 
 class GraphQLService {
+  // Local?
   // static final baseUrl = "http://172.16.1.247";
+  // Lab?
   // static final String baseUrl = "http://192.168.0.111";
-  static final String baseUrl = "http://192.168.100.9";
-  // static final HttpLink httpLink = HttpLink("http://localhost:4000/graphql");
+  // Home
+  // static final String baseUrl = "http://192.168.100.9";
+  // Omel
+  static final String baseUrl = "http://192.168.68.66";
   static final HttpLink httpLink = HttpLink(
     // "http://192.168.100.9:4000/graphql",
     // "http://192.168.1.82:4000/graphql",
@@ -146,6 +150,15 @@ class GraphQLService {
     mutation CreateItem($itemNumber: Int!, $itemName: String!, $discount: Float!, $stock: Int!, $unitPrice: Int!, $imageURL: String!, $description: String!) {
       createItem(itemNumber: $itemNumber, itemName: $itemName, discount: $discount, stock: $stock, unitPrice: $unitPrice, imageURL: $imageURL, description: $description) {
         message
+        success
+      }
+    }
+  """;
+
+  static const String deductItemMutation = r"""
+    mutation DeductItem($productID: Int!, $quantity: Int!) {
+      deductItem(productID: $productID, quantity: $quantity) {
+        message,
         success
       }
     }

@@ -10,18 +10,17 @@ class GenerateQRScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final Map<dynamic, dynamic> args =
         ModalRoute.of(context)!.settings.arguments as Map;
-    final String type = args["type"] as String;
     final Map<String, dynamic> itemsData = {
       "data": args["data"],
       "revent": true,
-      "type": type,
+      "type": args["type"],
     };
     // itemsData[itemsData.length] = {"revent": true};
 
     // bool isLightMode = Theme.of(context).brightness;
 
     return Scaffold(
-      appBar: AppBar(title: Text("Generating qr code $type")),
+      appBar: AppBar(title: Text("Generating qr code ${args["type"]}")),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(horizontal: 24),
         child: Column(

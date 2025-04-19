@@ -17,6 +17,41 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
   bool isScanning = true;
   final MobileScannerController cameraController = MobileScannerController();
 
+  final client = getGraphQLClient(null);
+
+  Future<QueryResult<Object?>> processIN(Map<String, dynamic> qrdata) async {
+    final result = await client.mutate(
+      MutationOptions(
+        document: gql(GraphQLService.createItemMutation),
+        variables: {
+          "itemNumber": qrdata["itemNumber"],
+          "itemName": qrdata["itemName"],
+          "discount": qrdata["discount"],
+          "stock": qrdata["stock"],
+          "unitPrice": qrdata["unitPrice"],
+          "imageURL": qrdata["imageURL"],
+          "description": qrdata["description"],
+        },
+      ),
+    );
+
+    return result;
+  }
+
+  Future<QueryResult<Object?>> processOUT(Map<String, dynamic> qrdata) async {
+    final result = await client.mutate(
+      MutationOptions(
+        document: gql(GraphQLService.deductItemMutation),
+        variables: {
+          "productID": qrdata["productID"],
+          "quantity": qrdata["selectedQuantity"],
+        },
+      ),
+    );
+
+    return result;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -77,35 +112,34 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                 });
                 cameraController.stop();
 
-                final client = getGraphQLClient(null);
                 final data = decodedData["data"];
 
-                void processQR(Map<String, dynamic> qrdata) async {
-                  final result = await client.mutate(
-                    MutationOptions(
-                      document: gql(GraphQLService.createItemMutation),
-                      variables: {
-                        "itemNumber": qrdata["itemNumber"],
-                        "itemName": qrdata["itemName"],
-                        "discount": qrdata["discount"],
-                        "stock": qrdata["stock"],
-                        "unitPrice": qrdata["unitPrice"],
-                        "imageURL": qrdata["imageURL"],
-                        "description": qrdata["description"],
-                      },
-                    ),
-                  );
-                }
+                // if (decodedData["type"] == "in") {
 
                 for (int i = 0; i < data.length; i++) {
                   Map<String, dynamic> val = data[i];
-                  processQR(val);
+                  Future<QueryResult<Object?>> result;
+
+                  if (decodedData["type"] == "in") {
+                    result = processIN(val);
+                    print("Result for IN ITEM: $result");
+                  } else if (decodedData["type"] == "out") {
+                    result = processOUT(val);
+                    print("Result for OUT ITEM: $result");
+                  }
                 }
 
+                // If the flow reaches here, it means there's no error
+                // if (decodedData["type"] == "in") {
+                //
+                //  }
                 _showDialog(
-                  "New items created",
-                  "${data.length} items successfully created.",
+                  decodedData["type"] == "in"
+                      ? "New items created"
+                      : "Items updated",
+                  "${data.length} items has been modified.",
                 );
+
                 return;
               } else {
                 // print("The qr code is not valid");

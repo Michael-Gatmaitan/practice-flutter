@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
+import 'package:newflutter/components/_forms.dart';
+import 'package:newflutter/components/counter_state.dart';
+import 'package:newflutter/graphql/graphql_config.dart';
 import '../../../graphql/graphql_service.dart';
 
 class ItemOutScreen extends StatefulWidget {
@@ -12,6 +15,9 @@ class ItemOutScreen extends StatefulWidget {
 class _ItemOutScreenState extends State<ItemOutScreen> {
   List<Map<String, dynamic>> items = [];
   List<Map<String, dynamic>> selectedItems = [];
+  List<Map<String, dynamic>> users = [
+    // {"customerID": 1, "fullname": "michael"},
+  ];
 
   void _updateSelectedItem(Map<String, dynamic> item, bool isChecked) {
     setState(() {
@@ -62,11 +68,58 @@ class _ItemOutScreenState extends State<ItemOutScreen> {
     });
   }
 
+  Future<List<Map<String, dynamic>>> getUsers() async {
+    final client = getGraphQLClient(null);
+    final result = await client.query(
+      QueryOptions(document: gql(GraphQLService.getCustomersQuery)),
+    );
+
+    final userResults = result.data?["customers"];
+
+    // print("RESULTTTTTT: ${result.data?['customers']}");
+    print("USER RESULTS: $userResults");
+    setState(() {
+      users = result.data?['customers'];
+    });
+
+    return userResults;
+  }
+
+  void getUsersFunc() async {
+    final _users = await getUsers();
+    print(_users);
+    setState(() {
+      users = _users;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // getUsersFunc();
+  }
   // UPDATE item SET stock = stock - q WHERE productID = q
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        centerTitle: true,
+        title: Text(
+          textAlign: TextAlign.center,
+          "Item-OUT",
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            fontFamily: "Montserrat",
+          ),
+        ),
+        // actions: [
+        //   DropdownMenu(
+        //     dropdownMenuEntries: [DropdownMenuEntry(value: 1, label: "Label")],
+        //   ),
+        // ],
+      ),
       body: Query(
         options: QueryOptions(document: gql(GraphQLService.getItemsQuery)),
         builder: (QueryResult result, {refetch, fetchMore}) {
@@ -84,7 +137,7 @@ class _ItemOutScreenState extends State<ItemOutScreen> {
 
           final fetchedItems = result.data?['items'] as List<dynamic>;
 
-          if (fetchedItems != null) {
+          if (!fetchedItems.isEmpty) {
             items =
                 fetchedItems.map((item) {
                   return {
@@ -92,6 +145,7 @@ class _ItemOutScreenState extends State<ItemOutScreen> {
                     'itemName': item['itemName'],
                     'stock': item['stock'],
                     'imageURL': item['imageURL'],
+                    'unitPrice': item['unitPrice'],
                     'isChecked':
                         items.firstWhere(
                           (existing) =>
@@ -121,7 +175,32 @@ class _ItemOutScreenState extends State<ItemOutScreen> {
                       _updateSelectedItem(item, value!);
                     },
                   ),
-                  title: Text(item['itemName']),
+                  title: Row(
+                    mainAxisSize: MainAxisSize.min,
+
+                    children: [
+                      SizedBox(
+                        width: 50,
+                        height: 50,
+                        child: Image.network(
+                          "${GraphQLService.baseUrl}/imsa/data/item_images/${item["imageURL"]}",
+                          fit: BoxFit.fill,
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      Column(
+                        // mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(item['itemName']),
+                          Text(
+                            '${item["unitPrice"]}',
+                            style: TextStyle(fontSize: 14),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                   // subtitle: Text(''),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -160,6 +239,83 @@ class _ItemOutScreenState extends State<ItemOutScreen> {
           // return
           return Center(child: Text('No items found.'));
         },
+      ),
+
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          final finalSelectedItems = selectedItems.where(
+            (item) => (item['selectedQuantity'] as int) > 0,
+          );
+
+          print("Final selected items are: $finalSelectedItems");
+
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: Text('Selected Items'),
+                content: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  // mainAxisAlignment: MainAxisAlignment.min,
+                  children:
+                      finalSelectedItems.isEmpty
+                          ? [Text('No items selected.')]
+                          : finalSelectedItems.map((selectedItem) {
+                            return Text(
+                              "${selectedItem['itemName']} : ${selectedItem['selectedQuantity']}",
+                            );
+                          }).toList(),
+                ),
+                actions: [
+                  DropdownButton(
+                    // items: [DropdownMenuItem(value: 0, child: Text("ASD"))],
+                    items:
+                        users.map((user) {
+                          // return user["customerID"];
+                          print(user);
+                          return DropdownMenuItem(
+                            value: user["customerID"],
+                            child: Text(user["fullname"]),
+                          );
+                        }).toList(),
+                    // value: 0,
+                    onChanged: (val) {
+                      print(val);
+                    },
+                  ),
+                  TextButton(
+                    // style: btnStyle("pri"),
+                    onPressed: () {
+                      Navigator.pushNamed(
+                        context,
+                        "/generateqr",
+                        arguments: {
+                          // data: finalSelectedItems,
+                          "data": finalSelectedItems.toList(),
+                          "type": "out",
+                        },
+                      );
+                    },
+                    child: Text("Proceed"),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text("Close"),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+        child: Icon(Icons.check),
+
+        // child: IconButton(onPressed: onPressed, icon: icon)
+        // child: Row(
+        //   children: [Icon(Icons.check), SizedBox(width: 8), Text("Proceed")],
+        // ),
       ),
     );
   }

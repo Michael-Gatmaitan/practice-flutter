@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 // import 'package:newflutter/auth/auth_actions.dart';
 import 'package:newflutter/auth/auth_provider.dart';
 import 'package:newflutter/components/_forms.dart';
+import 'package:newflutter/firebase/transactions.dart';
 import 'package:newflutter/routes/inventory-action/generateqr.dart';
 import 'package:newflutter/routes/inventory-action/in/screen.dart';
 import 'package:newflutter/routes/inventory-action/out/screen.dart';
@@ -19,12 +20,18 @@ import 'dart:convert';
 // import "package:mobile";
 import 'routes/inventory-action/qrscanner.dart';
 
+// flutter setup
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Create and load AuthProvider before the app starts
   final authProvider = AuthProvider();
   await authProvider.loadToken();
+
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   runApp(MyApp(authProvider: authProvider));
 }
@@ -184,7 +191,8 @@ class _HomeState extends State<Home> {
   ];
 
   static final List<Widget> _widgetBottomOptions = [
-    homeBody(),
+    // homeBody(),
+    testFirebase(),
     QrActionBody(),
     transactionsBody(),
   ];
@@ -323,6 +331,22 @@ class _HomeState extends State<Home> {
       body: _widgetBottomOptions[_selectedBottomIndex],
     );
   }
+}
+
+Widget testFirebase() {
+  FirebaseTransactionService _transactionService = FirebaseTransactionService();
+  return SingleChildScrollView(
+    child: Container(
+      color: Colors.blue,
+      child: ElevatedButton(
+        child: Text("Add transaction sample"),
+        onPressed: () {
+          _transactionService.addTransaction("in", 9090, [1, 2, 3]);
+        },
+      ),
+    ),
+    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+  );
 }
 
 Widget homeBody() {
