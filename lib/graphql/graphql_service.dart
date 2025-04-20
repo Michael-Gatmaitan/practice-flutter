@@ -7,15 +7,10 @@ class GraphQLService {
   // Lab?
   // static final String baseUrl = "http://192.168.0.111";
   // Home
-  // static final String baseUrl = "http://192.168.100.9";
+  static final String baseUrl = "http://192.168.100.9";
   // Omel
-  static final String baseUrl = "http://192.168.68.66";
-  static final HttpLink httpLink = HttpLink(
-    // "http://192.168.100.9:4000/graphql",
-    // "http://192.168.1.82:4000/graphql",
-    // "http://192.168.100.9:4000/graphql",
-    "$baseUrl:4000/graphql",
-  );
+  // static final String baseUrl = "http://192.168.68.66";
+  static final HttpLink httpLink = HttpLink("$baseUrl:4000/graphql");
   static ValueNotifier<GraphQLClient> client = ValueNotifier(
     GraphQLClient(link: httpLink, cache: GraphQLCache()),
   );

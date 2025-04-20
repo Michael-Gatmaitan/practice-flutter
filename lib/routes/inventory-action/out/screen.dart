@@ -15,9 +15,12 @@ class ItemOutScreen extends StatefulWidget {
 class _ItemOutScreenState extends State<ItemOutScreen> {
   List<Map<String, dynamic>> items = [];
   List<Map<String, dynamic>> selectedItems = [];
-  List<Map<String, dynamic>> users = [
-    // {"customerID": 1, "fullname": "michael"},
-  ];
+  // List<Map<String, dynamic>> users = [
+  //   // {"customerID": 1, "fullname": "michael"},
+  // ];
+  Future<List<Map<String, dynamic>>>?
+  _usersFuture; // Use a Future to hold the eventual result
+  List<Map<String, dynamic>> users = [];
 
   void _updateSelectedItem(Map<String, dynamic> item, bool isChecked) {
     setState(() {
@@ -68,30 +71,46 @@ class _ItemOutScreenState extends State<ItemOutScreen> {
     });
   }
 
+  Future<void> _loadUsers() async {
+    final fetchedUsers = await getUsers();
+
+    setState(() {
+      users = fetchedUsers;
+    });
+  }
+
   Future<List<Map<String, dynamic>>> getUsers() async {
     final client = getGraphQLClient(null);
     final result = await client.query(
       QueryOptions(document: gql(GraphQLService.getCustomersQuery)),
     );
 
-    final userResults = result.data?["customers"];
-
-    // print("RESULTTTTTT: ${result.data?['customers']}");
+    final userResults = result.data?['customers'];
     print("USER RESULTS: $userResults");
-    setState(() {
-      users = result.data?['customers'];
-    });
-
-    return userResults;
+    // return userResults;
+    return userResults?.cast<Map<String, dynamic>>() ?? [];
   }
 
-  void getUsersFunc() async {
-    final _users = await getUsers();
-    print(_users);
-    setState(() {
-      users = _users;
-    });
-  }
+  //   Future<List<Map<String, dynamic>>> getUsers() async {
+  //     final client = getGraphQLClient(null);
+  //     final result = await client.query(
+  //       QueryOptions(document: gql(GraphQLService.getCustomersQuery)),
+  //     );
+  //
+  //     final userResults = result.data?["customers"];
+  //
+  //     // print("USER RESULTS: $userResults");
+  //     // setState(() {
+  //     //   users = result.data?['customers'];
+  //     // });
+  //
+  // if (userResults != null && userResults is List) {
+  //     return userResults.cast<Map<String, dynamic>>();
+  //   } else {
+  //     print("Error: 'customers' field not found or is not a list in GraphQL response.");
+  //     return [];
+  //   }
+  //   }
 
   @override
   void initState() {
@@ -268,22 +287,60 @@ class _ItemOutScreenState extends State<ItemOutScreen> {
                           }).toList(),
                 ),
                 actions: [
-                  DropdownButton(
-                    // items: [DropdownMenuItem(value: 0, child: Text("ASD"))],
-                    items:
-                        users.map((user) {
-                          // return user["customerID"];
-                          print(user);
-                          return DropdownMenuItem(
-                            value: user["customerID"],
-                            child: Text(user["fullname"]),
-                          );
-                        }).toList(),
-                    // value: 0,
-                    onChanged: (val) {
-                      print(val);
+                  // DropdownButton(
+                  //   items:
+                  //       users.map((user) {
+                  //         return DropdownMenuItem(
+                  //           value: user["customerID"],
+                  //           child: Text(user["fullname"]),
+                  //         );
+                  //       }).toList(),
+                  //   onChanged: (val) {
+                  //     print(val);
+                  //   },
+                  // ),
+                  FutureBuilder<List<Map<String, dynamic>>>(
+                    future: getUsers(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return CircularProgressIndicator(); // Or some loading indicator
+                      } else if (snapshot.hasError) {
+                        return Text('Error: ${snapshot.error}');
+                      } else if (snapshot.hasData) {
+                        users = snapshot.data!;
+                        return DropdownButton(
+                          items:
+                              users.map((user) {
+                                return DropdownMenuItem(
+                                  value: user["customerID"],
+                                  child: Text(user["fullName"]),
+                                );
+                              }).toList(),
+                          onChanged: (val) {
+                            print(val);
+                          },
+                        );
+                      } else {
+                        return Text('No data');
+                      }
                     },
                   ),
+                  // DropdownButton(
+                  //   // items: [DropdownMenuItem(value: 0, child: Text("ASD"))],
+                  //   items:
+                  //       users.map((user) {
+                  //         // return user["customerID"];
+                  //         print(user);
+                  //         return DropdownMenuItem(
+                  //           value: user["customerID"],
+                  //           child: Text(user["fullname"]),
+                  //         );
+                  //       }).toList(),
+                  //   // value: 0,
+                  //   onChanged: (val) {
+                  //     print(val);
+                  //   },
+                  // ),
                   TextButton(
                     // style: btnStyle("pri"),
                     onPressed: () {
@@ -311,12 +368,17 @@ class _ItemOutScreenState extends State<ItemOutScreen> {
           );
         },
         child: Icon(Icons.check),
-
-        // child: IconButton(onPressed: onPressed, icon: icon)
-        // child: Row(
-        //   children: [Icon(Icons.check), SizedBox(width: 8), Text("Proceed")],
-        // ),
       ),
     );
   }
 }
+
+// class UsersDropDown extends StatelessWidget {
+//   List<Map<String, dynamic>> users = [];
+//   UsersDropDown({super.key, required this.users});
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return DropdownMenu();
+//   }
+// }
