@@ -14,7 +14,7 @@ class QRScannerScreen extends StatefulWidget {
 }
 
 class _QRScannerScreenState extends State<QRScannerScreen> {
-  bool isScanning = true;
+  bool isScanning = false;
   final MobileScannerController cameraController = MobileScannerController();
 
   final client = getGraphQLClient(null);
@@ -38,13 +38,27 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
     return result;
   }
 
-  Future<QueryResult<Object?>> processOUT(Map<String, dynamic> qrdata) async {
+  Future<QueryResult<Object?>> processOUT(
+    Map<String, dynamic> qrdata,
+    int customerID,
+  ) async {
+    // print("Customer id: ${qrdata["customerID"]}");
+    // print("Product id: ${qrdata["productID"]}");
+
     final result = await client.mutate(
       MutationOptions(
         document: gql(GraphQLService.deductItemMutation),
         variables: {
           "productID": qrdata["productID"],
           "quantity": qrdata["selectedQuantity"],
+          // "customerID": qrdata["customerID"],
+          "customerID": customerID,
+
+          // Args added for GQL Variables
+          // "itemNumber": qrdata["itemNumber"],
+          // "itemName": qrdata["itemName"],
+          // "discount": qrdata["discount"],
+          // "unitPrice": qrdata["unitPrice"],
         },
       ),
     );
@@ -115,6 +129,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                 final data = decodedData["data"];
 
                 // if (decodedData["type"] == "in") {
+                print("TYPE: ${decodedData['type']}");
 
                 for (int i = 0; i < data.length; i++) {
                   Map<String, dynamic> val = data[i];
@@ -124,7 +139,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                     result = processIN(val);
                     print("Result for IN ITEM: $result");
                   } else if (decodedData["type"] == "out") {
-                    result = processOUT(val);
+                    result = processOUT(val, decodedData["customerID"]);
                     print("Result for OUT ITEM: $result");
                   }
                 }

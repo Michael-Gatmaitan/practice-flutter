@@ -10,10 +10,12 @@ class GenerateQRScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final Map<dynamic, dynamic> args =
         ModalRoute.of(context)!.settings.arguments as Map;
+    print("FROM ARGS: ${args['customerID']}");
     final Map<String, dynamic> itemsData = {
       "data": args["data"],
       "revent": true,
       "type": args["type"],
+      "customerID": args["customerID"],
     };
     // itemsData[itemsData.length] = {"revent": true};
 

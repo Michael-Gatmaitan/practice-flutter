@@ -15,12 +15,13 @@ class ItemOutScreen extends StatefulWidget {
 class _ItemOutScreenState extends State<ItemOutScreen> {
   List<Map<String, dynamic>> items = [];
   List<Map<String, dynamic>> selectedItems = [];
-  // List<Map<String, dynamic>> users = [
-  //   // {"customerID": 1, "fullname": "michael"},
-  // ];
+
   Future<List<Map<String, dynamic>>>?
   _usersFuture; // Use a Future to hold the eventual result
-  List<Map<String, dynamic>> users = [];
+  List<Map<String, dynamic>> users =
+      []; // Use 'users' to catch values in FutureBuilder when _usersFuture done for waiting to have a value
+  // Kinda like placeholder variable
+  int? _selectedCustomerID;
 
   void _updateSelectedItem(Map<String, dynamic> item, bool isChecked) {
     setState(() {
@@ -71,14 +72,7 @@ class _ItemOutScreenState extends State<ItemOutScreen> {
     });
   }
 
-  Future<void> _loadUsers() async {
-    final fetchedUsers = await getUsers();
-
-    setState(() {
-      users = fetchedUsers;
-    });
-  }
-
+  // Call the getUsers inside the initState and set it as value of '_usersFuture'
   Future<List<Map<String, dynamic>>> getUsers() async {
     final client = getGraphQLClient(null);
     final result = await client.query(
@@ -86,36 +80,15 @@ class _ItemOutScreenState extends State<ItemOutScreen> {
     );
 
     final userResults = result.data?['customers'];
-    print("USER RESULTS: $userResults");
-    // return userResults;
     return userResults?.cast<Map<String, dynamic>>() ?? [];
   }
-
-  //   Future<List<Map<String, dynamic>>> getUsers() async {
-  //     final client = getGraphQLClient(null);
-  //     final result = await client.query(
-  //       QueryOptions(document: gql(GraphQLService.getCustomersQuery)),
-  //     );
-  //
-  //     final userResults = result.data?["customers"];
-  //
-  //     // print("USER RESULTS: $userResults");
-  //     // setState(() {
-  //     //   users = result.data?['customers'];
-  //     // });
-  //
-  // if (userResults != null && userResults is List) {
-  //     return userResults.cast<Map<String, dynamic>>();
-  //   } else {
-  //     print("Error: 'customers' field not found or is not a list in GraphQL response.");
-  //     return [];
-  //   }
-  //   }
 
   @override
   void initState() {
     super.initState();
-    // getUsersFunc();
+    setState(() {
+      _usersFuture = getUsers();
+    });
   }
   // UPDATE item SET stock = stock - q WHERE productID = q
 
@@ -133,131 +106,183 @@ class _ItemOutScreenState extends State<ItemOutScreen> {
             fontFamily: "Montserrat",
           ),
         ),
-        // actions: [
-        //   DropdownMenu(
-        //     dropdownMenuEntries: [DropdownMenuEntry(value: 1, label: "Label")],
-        //   ),
-        // ],
       ),
-      body: Query(
-        options: QueryOptions(document: gql(GraphQLService.getItemsQuery)),
-        builder: (QueryResult result, {refetch, fetchMore}) {
-          if (result.hasException) {
-            return Center(
-              child: Text(
-                "Error fetching data: ${result.exception.toString()}",
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Select items',
+                  style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
+                ),
+
+                FutureBuilder<List<Map<String, dynamic>>>(
+                  // future: getUsers(),
+                  // future: users,
+                  future: _usersFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return CircularProgressIndicator(); // Or some loading indicator
+                    } else if (snapshot.hasError) {
+                      return Text('Error: ${snapshot.error}');
+                    } else if (snapshot.hasData) {
+                      users = snapshot.data!;
+                      return DropdownButton(
+                        items:
+                            users.map((user) {
+                              return DropdownMenuItem(
+                                value: user["customerID"],
+                                child: Text(user["fullName"]),
+                              );
+                            }).toList(),
+                        // value: users[0]["customerID"],
+                        value: _selectedCustomerID,
+                        onChanged: (val) {
+                          setState(() {
+                            _selectedCustomerID = int.parse(val.toString());
+                          });
+                        },
+                      );
+                    } else {
+                      return Text('No data');
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: Query(
+              options: QueryOptions(
+                document: gql(GraphQLService.getItemsQuery),
               ),
-            );
-          }
+              builder: (QueryResult result, {refetch, fetchMore}) {
+                if (result.hasException) {
+                  return Center(
+                    child: Text(
+                      "Error fetching data: ${result.exception.toString()}",
+                    ),
+                  );
+                }
 
-          if (result.isLoading) {
-            return Center(child: CircularProgressIndicator());
-          }
+                if (result.isLoading) {
+                  return Center(child: CircularProgressIndicator());
+                }
 
-          final fetchedItems = result.data?['items'] as List<dynamic>;
+                final fetchedItems = result.data?['items'] as List<dynamic>;
 
-          if (!fetchedItems.isEmpty) {
-            items =
-                fetchedItems.map((item) {
-                  return {
-                    'productID': item['productID'],
-                    'itemName': item['itemName'],
-                    'stock': item['stock'],
-                    'imageURL': item['imageURL'],
-                    'unitPrice': item['unitPrice'],
-                    'isChecked':
-                        items.firstWhere(
-                          (existing) =>
-                              existing['productID'] == item['productID'],
-                          orElse: () => {'isChecked': false},
-                        )['isChecked'] ??
-                        false,
-                    'selectedQuantity':
-                        items.firstWhere(
-                          (existing) =>
-                              existing['productID'] == item['productID'],
-                          orElse: () => {'selectedQuantity': 0},
-                        )['selectedQuantity'] ??
-                        0,
-                  };
-                }).toList();
+                if (fetchedItems.isNotEmpty) {
+                  items =
+                      fetchedItems.map((item) {
+                        return {
+                          'productID': item['productID'],
+                          'itemName': item['itemName'],
+                          'stock': item['stock'],
+                          'imageURL': item['imageURL'],
+                          'unitPrice': item['unitPrice'],
+                          'isChecked':
+                              items.firstWhere(
+                                (existing) =>
+                                    existing['productID'] == item['productID'],
+                                orElse: () => {'isChecked': false},
+                              )['isChecked'] ??
+                              false,
+                          'selectedQuantity':
+                              items.firstWhere(
+                                (existing) =>
+                                    existing['productID'] == item['productID'],
+                                orElse: () => {'selectedQuantity': 0},
+                              )['selectedQuantity'] ??
+                              0,
+                        };
+                      }).toList();
 
-            return ListView.builder(
-              itemCount: items.length,
-              itemBuilder: (context, index) {
-                final item = items[index];
+                  return ListView.builder(
+                    itemCount: items.length,
+                    itemBuilder: (context, index) {
+                      final item = items[index];
 
-                return ListTile(
-                  leading: Checkbox(
-                    value: item['isChecked'],
-                    onChanged: (bool? value) {
-                      _updateSelectedItem(item, value!);
-                    },
-                  ),
-                  title: Row(
-                    mainAxisSize: MainAxisSize.min,
-
-                    children: [
-                      SizedBox(
-                        width: 50,
-                        height: 50,
-                        child: Image.network(
-                          "${GraphQLService.baseUrl}/imsa/data/item_images/${item["imageURL"]}",
-                          fit: BoxFit.fill,
+                      return ListTile(
+                        leading: Checkbox(
+                          value: item['isChecked'],
+                          onChanged: (bool? value) {
+                            _updateSelectedItem(item, value!);
+                          },
                         ),
-                      ),
-                      SizedBox(width: 8),
-                      Column(
-                        // mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(item['itemName']),
-                          Text(
-                            '${item["unitPrice"]}',
-                            style: TextStyle(fontSize: 14),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  // subtitle: Text(''),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.remove),
-                        onPressed:
-                            item['isChecked'] &&
-                                    (item['selectedQuantity'] as int? ?? 0) > 0
-                                ? () => _updateQuantity(
-                                  item,
-                                  (item['selectedQuantity'] as int) - 1,
-                                )
-                                : null,
-                      ),
-                      SizedBox(width: 8),
-                      Text("${item['selectedQuantity']}"),
-                      IconButton(
-                        icon: Icon(Icons.add),
-                        onPressed:
-                            item['isChecked'] &&
-                                    (item['selectedQuantity'] as int? ?? 0) <
-                                        (item['stock'] as int? ?? 0)
-                                ? () => _updateQuantity(
-                                  item,
-                                  (item['selectedQuantity'] as int) + 1,
-                                )
-                                : null,
-                      ),
-                    ],
-                  ),
-                );
+                        title: Row(
+                          mainAxisSize: MainAxisSize.min,
+
+                          children: [
+                            SizedBox(
+                              width: 50,
+                              height: 50,
+                              child: Image.network(
+                                "${GraphQLService.baseUrl}/imsa/data/item_images/${item["imageURL"]}",
+                                fit: BoxFit.fill,
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Column(
+                              // mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(item['itemName']),
+                                Text(
+                                  '${item["unitPrice"]}',
+                                  style: TextStyle(fontSize: 14),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        // subtitle: Text(''),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: Icon(Icons.remove),
+                              onPressed:
+                                  item['isChecked'] &&
+                                          (item['selectedQuantity'] as int? ??
+                                                  0) >
+                                              0
+                                      ? () => _updateQuantity(
+                                        item,
+                                        (item['selectedQuantity'] as int) - 1,
+                                      )
+                                      : null,
+                            ),
+                            SizedBox(width: 8),
+                            Text("${item['selectedQuantity']}"),
+                            IconButton(
+                              icon: Icon(Icons.add),
+                              onPressed:
+                                  item['isChecked'] &&
+                                          (item['selectedQuantity'] as int? ??
+                                                  0) <
+                                              (item['stock'] as int? ?? 0)
+                                      ? () => _updateQuantity(
+                                        item,
+                                        (item['selectedQuantity'] as int) + 1,
+                                      )
+                                      : null,
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                }
+                // return
+                return Center(child: Text('No items found.'));
               },
-            );
-          }
-          // return
-          return Center(child: Text('No items found.'));
-        },
+            ),
+          ),
+        ],
       ),
 
       floatingActionButton: FloatingActionButton(
@@ -265,8 +290,6 @@ class _ItemOutScreenState extends State<ItemOutScreen> {
           final finalSelectedItems = selectedItems.where(
             (item) => (item['selectedQuantity'] as int) > 0,
           );
-
-          print("Final selected items are: $finalSelectedItems");
 
           showDialog(
             context: context,
@@ -287,73 +310,25 @@ class _ItemOutScreenState extends State<ItemOutScreen> {
                           }).toList(),
                 ),
                 actions: [
-                  // DropdownButton(
-                  //   items:
-                  //       users.map((user) {
-                  //         return DropdownMenuItem(
-                  //           value: user["customerID"],
-                  //           child: Text(user["fullname"]),
-                  //         );
-                  //       }).toList(),
-                  //   onChanged: (val) {
-                  //     print(val);
-                  //   },
-                  // ),
-                  FutureBuilder<List<Map<String, dynamic>>>(
-                    future: getUsers(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return CircularProgressIndicator(); // Or some loading indicator
-                      } else if (snapshot.hasError) {
-                        return Text('Error: ${snapshot.error}');
-                      } else if (snapshot.hasData) {
-                        users = snapshot.data!;
-                        return DropdownButton(
-                          items:
-                              users.map((user) {
-                                return DropdownMenuItem(
-                                  value: user["customerID"],
-                                  child: Text(user["fullName"]),
-                                );
-                              }).toList(),
-                          onChanged: (val) {
-                            print(val);
-                          },
-                        );
-                      } else {
-                        return Text('No data');
-                      }
-                    },
-                  ),
-                  // DropdownButton(
-                  //   // items: [DropdownMenuItem(value: 0, child: Text("ASD"))],
-                  //   items:
-                  //       users.map((user) {
-                  //         // return user["customerID"];
-                  //         print(user);
-                  //         return DropdownMenuItem(
-                  //           value: user["customerID"],
-                  //           child: Text(user["fullname"]),
-                  //         );
-                  //       }).toList(),
-                  //   // value: 0,
-                  //   onChanged: (val) {
-                  //     print(val);
-                  //   },
-                  // ),
                   TextButton(
                     // style: btnStyle("pri"),
-                    onPressed: () {
-                      Navigator.pushNamed(
-                        context,
-                        "/generateqr",
-                        arguments: {
-                          // data: finalSelectedItems,
-                          "data": finalSelectedItems.toList(),
-                          "type": "out",
-                        },
-                      );
-                    },
+                    onPressed:
+                        _selectedCustomerID == null ||
+                                finalSelectedItems.isEmpty
+                            ? null
+                            : () {
+                              Navigator.pushNamed(
+                                context,
+                                "/generateqr",
+                                arguments: {
+                                  // data: finalSelectedItems,
+                                  "data": finalSelectedItems.toList(),
+                                  "customerID": _selectedCustomerID,
+                                  "type": "out",
+                                },
+                              );
+                            },
+
                     child: Text("Proceed"),
                   ),
                   TextButton(
@@ -372,13 +347,3 @@ class _ItemOutScreenState extends State<ItemOutScreen> {
     );
   }
 }
-
-// class UsersDropDown extends StatelessWidget {
-//   List<Map<String, dynamic>> users = [];
-//   UsersDropDown({super.key, required this.users});
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return DropdownMenu();
-//   }
-// }

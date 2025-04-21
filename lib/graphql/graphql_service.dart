@@ -150,9 +150,16 @@ class GraphQLService {
     }
   """;
 
+  // mutation DeductItem($productID: Int!, $quantity: Int!, $customerID: Int!, $itemNumber: String!, $itemName: String!, $discount: Float!, $unitPrice: Int!) {
+  //   deductItem(productID: $productID, quantity: $quantity, customerID: $customerID, itemNumber: $itemNumber, itemName: $itemName, discount: $discount, unitPrice: $unitPrice) {
+  //     message,
+  //     success
+  //   }
+  // }
+
   static const String deductItemMutation = r"""
-    mutation DeductItem($productID: Int!, $quantity: Int!) {
-      deductItem(productID: $productID, quantity: $quantity) {
+    mutation DeductItem($productID: Int!, $quantity: Int!, $customerID: Int!) {
+      deductItem(productID: $productID, quantity: $quantity, customerID: $customerID) {
         message,
         success
       }
