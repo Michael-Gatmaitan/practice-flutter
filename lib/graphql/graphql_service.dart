@@ -9,7 +9,8 @@ class GraphQLService {
   // Home
   // static final String baseUrl = "http://192.168.1.23";
   // static final String baseUrl = "http://192.168.1.112";
-  static final String baseUrl = "http://172.16.1.198";
+  // static final String baseUrl = "http://172.16.1.198";
+  static final String baseUrl = "http://192.168.100.9";
   // Omel
   // static final String baseUrl = "http://192.168.68.66";
   static final HttpLink httpLink = HttpLink("$baseUrl:4000/graphql");
