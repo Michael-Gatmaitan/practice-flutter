@@ -8,7 +8,6 @@ Future<Map<String, dynamic>?> getUserInfo() async {
   final token = await storage.read(key: "token");
 
   if (token == null) {
-    // No token found
     return null;
   }
 
@@ -18,8 +17,6 @@ Future<Map<String, dynamic>?> getUserInfo() async {
     ).concat(GraphQLService.httpLink),
     cache: GraphQLCache(),
   );
-
-  // print(client.);
 
   try {
     final result = await client.query(

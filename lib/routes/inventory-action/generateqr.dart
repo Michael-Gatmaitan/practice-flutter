@@ -14,7 +14,7 @@ class GenerateQRScreen extends StatelessWidget {
     final Map<String, dynamic> itemsData = {
       "data": args["data"],
       "revent": true,
-      "type": args["type"],
+      "type": args["type"], // "in" o "out"
       "customerID": args["customerID"],
     };
     // itemsData[itemsData.length] = {"revent": true};

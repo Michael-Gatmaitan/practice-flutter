@@ -321,7 +321,6 @@ class _ItemOutScreenState extends State<ItemOutScreen> {
                                 context,
                                 "/generateqr",
                                 arguments: {
-                                  // data: finalSelectedItems,
                                   "data": finalSelectedItems.toList(),
                                   "customerID": _selectedCustomerID,
                                   "type": "out",

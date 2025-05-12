@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:newflutter/graphql/graphql_config.dart';
+// import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../graphql/graphql_service.dart';
 
 class QRScannerScreen extends StatefulWidget {
@@ -20,6 +22,13 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
   final client = getGraphQLClient(null);
 
   Future<QueryResult<Object?>> processIN(Map<String, dynamic> qrdata) async {
+    await FirebaseFirestore.instance.collection('transaction').add({
+      'createdAt': 'Jan 1 2020',
+      'customerID': 4,
+      'insertedItems': [1, 2, 3],
+      'type': "in",
+    });
+
     final result = await client.mutate(
       MutationOptions(
         document: gql(GraphQLService.createItemMutation),
@@ -42,9 +51,6 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
     Map<String, dynamic> qrdata,
     int customerID,
   ) async {
-    // print("Customer id: ${qrdata["customerID"]}");
-    // print("Product id: ${qrdata["productID"]}");
-
     final result = await client.mutate(
       MutationOptions(
         document: gql(GraphQLService.deductItemMutation),
@@ -106,7 +112,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
           final List<Barcode> barcodes = capture.barcodes;
           for (final barcode in barcodes) {
             debugPrint('Barcode found! ${barcode.rawValue}');
-            print("Barcode found! ${barcode.rawValue}");
+            // print("Barcode found! ${barcode.rawValue}");
 
             try {
               final Map<String, dynamic> decodedData = jsonDecode(
@@ -116,11 +122,6 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
               if (decodedData.containsKey("data") &&
                   decodedData.containsKey("revent") &&
                   decodedData.containsKey("type")) {
-                // _showDialog(
-                //   "QR Code Data",
-                //   "Valid JSON with 'data' field found!",
-                // );
-
                 setState(() {
                   isScanning = false;
                 });
@@ -128,26 +129,19 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
 
                 final data = decodedData["data"];
 
-                // if (decodedData["type"] == "in") {
-                print("TYPE: ${decodedData['type']}");
-
                 for (int i = 0; i < data.length; i++) {
                   Map<String, dynamic> val = data[i];
                   Future<QueryResult<Object?>> result;
 
                   if (decodedData["type"] == "in") {
                     result = processIN(val);
-                    print("Result for IN ITEM: $result");
+                    // print("Result for IN ITEM: $result");
                   } else if (decodedData["type"] == "out") {
                     result = processOUT(val, decodedData["customerID"]);
-                    print("Result for OUT ITEM: $result");
+                    // print("Result for OUT ITEM: $result");
                   }
                 }
 
-                // If the flow reaches here, it means there's no error
-                // if (decodedData["type"] == "in") {
-                //
-                //  }
                 _showDialog(
                   decodedData["type"] == "in"
                       ? "New items created"
@@ -174,7 +168,6 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                 "Error has occured",
                 "This may happen depends on qrcode's data.",
               );
-              // print("AAAAAAAAEEEEEEEEEEEEEEERRRRROROROOROROROROR $err");
               setState(() {
                 isScanning = false;
               });

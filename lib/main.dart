@@ -22,6 +22,7 @@ import 'routes/inventory-action/qrscanner.dart';
 
 // flutter setup
 import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -80,6 +81,7 @@ class _MyAppState extends State<MyApp> {
                       // ? QRScannerScreen()
                       : LoginScreen(),
               // home: ItemListScreen(),
+              // home: Home(onToggleTheme: toggleTheme),
               routes: {
                 "/item": (ctx) => ItemById(),
                 "/items": (ctx) => ItemListScreen(),
@@ -218,9 +220,14 @@ class _HomeState extends State<Home> {
             activeIcon: Icon(Icons.inventory_2),
             label: "Actions",
           ),
+          // BottomNavigationBarItem(
+          //   icon: Icon(Icons.percent),
+          //   label: 'Transactions',
+          //   backgroundColor: Colors.pink,
+          // ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.percent),
-            label: 'Transactions',
+            icon: Icon(Icons.shopping_basket),
+            label: 'Items',
             backgroundColor: Colors.pink,
           ),
         ],
@@ -334,18 +341,29 @@ class _HomeState extends State<Home> {
 }
 
 Widget testFirebase() {
-  FirebaseTransactionService _transactionService = FirebaseTransactionService();
+  // FirebaseTransactionService _transactionService = FirebaseTransactionService();
+  Future<void> basicTransaction() async {
+    await FirebaseFirestore.instance.collection('transaction').add({
+      'createdAt': 'Jan 1 2020',
+      'customerID': 4,
+      'insertedItems': [1, 2, 3],
+      'type': "in",
+    });
+  }
+
   return SingleChildScrollView(
     child: Container(
+      padding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
       color: Colors.blue,
-      child: ElevatedButton(
-        child: Text("Add transaction sample"),
-        onPressed: () {
-          _transactionService.addTransaction("in", 9090, [1, 2, 3]);
-        },
-      ),
+      child: SizedBox(height: 32),
+      // child: ElevatedButton(
+      //   child: SizedBox(height: 32),
+      //   onPressed: () {
+      //     // _transactionService.addTransaction("in", 9090, [1, 2, 3]);
+      //     basicTransaction();
+      //   },
+      // ),
     ),
-    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
   );
 }
 
