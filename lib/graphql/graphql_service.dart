@@ -2,23 +2,11 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:flutter/material.dart';
 
 class GraphQLService {
-  // Local?
-  // static final baseUrl = "http://172.16.1.247";
-  // Lab?
-  // static final String baseUrl = "http://192.168.0.111";
-  // Home
-  // static final String baseUrl = "http://192.168.1.23";
-  // static final String baseUrl = "http://192.168.1.112";
-  // static final String baseUrl = "http://172.16.1.198";
-  static final String baseUrl = "http://192.168.100.9";
-  // Omel
-  // static final String baseUrl = "http://192.168.68.66";
+  static final String baseUrl = "http://192.168.60.148";
   static final HttpLink httpLink = HttpLink("$baseUrl:4000/graphql");
   static ValueNotifier<GraphQLClient> client = ValueNotifier(
     GraphQLClient(link: httpLink, cache: GraphQLCache()),
   );
-
-  // asd
 
   //// ITEM QUERY ////
   static const String getItemsQuery = """

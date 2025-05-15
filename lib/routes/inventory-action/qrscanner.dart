@@ -22,12 +22,12 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
   final client = getGraphQLClient(null);
 
   Future<QueryResult<Object?>> processIN(Map<String, dynamic> qrdata) async {
-    await FirebaseFirestore.instance.collection('transaction').add({
-      'createdAt': 'Jan 1 2020',
-      'customerID': 4,
-      'insertedItems': [1, 2, 3],
-      'type': "in",
-    });
+    // await FirebaseFirestore.instance.collection('transaction').add({
+    //   'createdAt': 'Jan 1 2020',
+    //   'customerID': 4,
+    //   'insertedItems': [1, 2, 3],
+    //   'type': "in",
+    // });
 
     final result = await client.mutate(
       MutationOptions(
